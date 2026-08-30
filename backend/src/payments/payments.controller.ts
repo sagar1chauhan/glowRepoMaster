@@ -23,6 +23,15 @@ export class PaymentsController {
     dto.gym_id = dto.gym_id || user.gym_id;
     dto.city_id = dto.city_id || user.city_id;
 
+    // Fallback for MASTER_ADMIN who may not have gym_id set
+    if (!dto.gym_id) {
+      const gyms = await this.databaseService.query('SELECT id, city_id FROM gyms LIMIT 1');
+      if (gyms.length > 0) {
+        dto.gym_id = gyms[0].id;
+        dto.city_id = dto.city_id || gyms[0].city_id;
+      }
+    }
+
     const paymentRecord = await this.paymentsService.createPaymentLink(dto);
 
     // Log the sale in the database
@@ -80,10 +89,22 @@ export class PaymentsController {
     @Req() req: any,
   ) {
     const user = req.user;
+    let gymId = user.gym_id;
+    let cityId = user.city_id;
+
+    // Fallback for MASTER_ADMIN who may not have gym_id set
+    if (!gymId) {
+      const gyms = await this.databaseService.query('SELECT id, city_id FROM gyms LIMIT 1');
+      if (gyms.length > 0) {
+        gymId = gyms[0].id;
+        cityId = cityId || gyms[0].city_id;
+      }
+    }
+
     const result = await this.databaseService.query(
       `INSERT INTO sales (gym_id, city_id, amount, payment_method, status, notes)
        VALUES ($1, $2, $3, 'CASH', 'PAID', $4) RETURNING *`,
-      [user.gym_id, user.city_id, body.amount, body.notes || `Cash: ${body.member_name}`],
+      [gymId, cityId, body.amount, body.notes || `Cash: ${body.member_name}`],
     );
     return result[0];
   }

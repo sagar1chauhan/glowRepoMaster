@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
-import { useI18n } from '../../hooks/useI18n';
 
 const MembersManagement: React.FC = () => {
-  const { t } = useI18n();
+  const navigate = useNavigate();
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -100,6 +100,7 @@ const MembersManagement: React.FC = () => {
                 <th style={{ padding: '12px' }}>Email</th>
                 <th style={{ padding: '12px' }}>Status</th>
                 <th style={{ padding: '12px' }}>Expiry</th>
+                <th style={{ padding: '12px' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -118,11 +119,20 @@ const MembersManagement: React.FC = () => {
                     </span>
                   </td>
                   <td style={{ padding: '12px' }}>{new Date(m.membership_expiry).toLocaleDateString()}</td>
+                  <td style={{ padding: '12px' }}>
+                    <button
+                      className="btn btn-secondary"
+                      style={{ padding: '6px 14px', fontSize: '12px' }}
+                      onClick={() => navigate(`/admin/members/${m.id}`)}
+                    >
+                      👁️ View
+                    </button>
+                  </td>
                 </tr>
               ))}
               {members.length === 0 && (
                 <tr>
-                  <td colSpan={5} style={{ padding: '20px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                  <td colSpan={6} style={{ padding: '20px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
                     No members found. Add one above!
                   </td>
                 </tr>
