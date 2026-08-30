@@ -24,8 +24,22 @@ let MembersController = class MembersController {
     async findAll(req) {
         return this.membersService.findAll(req.user);
     }
+    async findOne(req, id) {
+        const member = await this.membersService.findOne(req.user, id);
+        if (!member) {
+            throw new common_1.NotFoundException('Member not found');
+        }
+        return member;
+    }
     async create(req, data) {
         return this.membersService.create(req.user, data);
+    }
+    async update(req, id, data) {
+        const member = await this.membersService.update(req.user, id, data);
+        if (!member) {
+            throw new common_1.NotFoundException('Member not found or no fields to update');
+        }
+        return member;
     }
 };
 exports.MembersController = MembersController;
@@ -37,6 +51,14 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], MembersController.prototype, "findAll", null);
 __decorate([
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], MembersController.prototype, "findOne", null);
+__decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
@@ -44,6 +66,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], MembersController.prototype, "create", null);
+__decorate([
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", Promise)
+], MembersController.prototype, "update", null);
 exports.MembersController = MembersController = __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Controller)('members'),

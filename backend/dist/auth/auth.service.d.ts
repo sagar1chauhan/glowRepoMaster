@@ -6,6 +6,7 @@ export interface UserPayload {
     city_id?: string;
     gym_id?: string;
     email: string;
+    name?: string;
 }
 export declare class AuthService {
     private readonly jwtService;
