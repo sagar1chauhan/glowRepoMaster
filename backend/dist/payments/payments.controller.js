@@ -28,6 +28,13 @@ let PaymentsController = class PaymentsController {
         const user = req.user;
         dto.gym_id = dto.gym_id || user.gym_id;
         dto.city_id = dto.city_id || user.city_id;
+        if (!dto.gym_id) {
+            const gyms = await this.databaseService.query('SELECT id, city_id FROM gyms LIMIT 1');
+            if (gyms.length > 0) {
+                dto.gym_id = gyms[0].id;
+                dto.city_id = dto.city_id || gyms[0].city_id;
+            }
+        }
         const paymentRecord = await this.paymentsService.createPaymentLink(dto);
         await this.databaseService.query(`INSERT INTO sales (gym_id, city_id, amount, payment_method, razorpay_link_id, status)
        VALUES ($1, $2, $3, 'UPI', $4, $5)`, [dto.gym_id, dto.city_id, dto.amount, paymentRecord.razorpay_payment_link_id, paymentRecord.status]);
@@ -50,8 +57,17 @@ let PaymentsController = class PaymentsController {
     }
     async logCashPayment(body, req) {
         const user = req.user;
+        let gymId = user.gym_id;
+        let cityId = user.city_id;
+        if (!gymId) {
+            const gyms = await this.databaseService.query('SELECT id, city_id FROM gyms LIMIT 1');
+            if (gyms.length > 0) {
+                gymId = gyms[0].id;
+                cityId = cityId || gyms[0].city_id;
+            }
+        }
         const result = await this.databaseService.query(`INSERT INTO sales (gym_id, city_id, amount, payment_method, status, notes)
-       VALUES ($1, $2, $3, 'CASH', 'PAID', $4) RETURNING *`, [user.gym_id, user.city_id, body.amount, body.notes || `Cash: ${body.member_name}`]);
+       VALUES ($1, $2, $3, 'CASH', 'PAID', $4) RETURNING *`, [gymId, cityId, body.amount, body.notes || `Cash: ${body.member_name}`]);
         return result[0];
     }
     async getDailyReconciliation(date, req) {

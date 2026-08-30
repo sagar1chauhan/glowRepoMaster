@@ -64,10 +64,12 @@ class OfflineBuffer {
     return new Promise((resolve, reject) => {
       const tx = this.db!.transaction(STORE_NAME, 'readonly');
       const store = tx.objectStore(STORE_NAME);
-      const index = store.index('synced');
-      const request = index.getAll(false);
+      const request = store.getAll();
 
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () => {
+        const allItems: OfflineCheckin[] = request.result || [];
+        resolve(allItems.filter((item) => !item.synced));
+      };
       request.onerror = () => reject(request.error);
     });
   }
@@ -105,17 +107,18 @@ class OfflineBuffer {
     return new Promise((resolve, reject) => {
       const tx = this.db!.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
-      const index = store.index('synced');
-      const request = index.openCursor(true);
+      const request = store.openCursor();
 
       request.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
         if (cursor) {
           const record = cursor.value;
-          const checkinTime = new Date(record.check_in_time).getTime();
-          const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-          if (checkinTime < oneDayAgo) {
-            cursor.delete();
+          if (record.synced) {
+            const checkinTime = new Date(record.check_in_time).getTime();
+            const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+            if (checkinTime < oneDayAgo) {
+              cursor.delete();
+            }
           }
           cursor.continue();
         }

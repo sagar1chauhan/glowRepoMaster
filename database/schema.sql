@@ -96,3 +96,16 @@ CREATE POLICY gym_isolation_policy_attendance ON attendance
     OR
     gym_id = current_setting('app.current_gym_id', true)::uuid
  );
+
+-- Table: admin_users (Multi-role support: MASTER_ADMIN, NODAL_MANAGER, GYM_ADMIN)
+CREATE TABLE IF NOT EXISTS admin_users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL, -- 'MASTER_ADMIN', 'NODAL_MANAGER', 'GYM_ADMIN'
+    name VARCHAR(255),
+    city_id UUID REFERENCES cities(id),
+    gym_id UUID REFERENCES gyms(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
